@@ -4,6 +4,7 @@
 #include <set>
 #include <utility>
 #include <functional>
+#include <vector>
 
 class IMethod
 {
@@ -16,22 +17,25 @@ public:
                      double eps,
                      std::function<double(double)> function);
 
-    void execute(uint32_t *count, double *min, double *point, double lowerBoundary, double upperBoundary);
+    void execute(uint32_t *count, double *min, double *point, double x1, double x2);
 
     double inline f(double x) const;
-protected:
-    [[nodiscard]] virtual double getValue(double lowerBoundary, double upperBoundary) = 0;
 
-    [[nodiscard]] virtual double getPoint(double lowerBoundary, double upperBoundary) = 0;
+    std::vector<double> getXVector() const;
+
+protected:
+    [[nodiscard]] virtual double getValue(double x1, double x2) = 0;
+
+    [[nodiscard]] virtual double getPoint(double x1, double x2) = 0;
 
     virtual void preprocess() = 0;
 
-    void addSegment(double lowerBoundary, double upperBoundary);
+    double inline getOptimalInex();
 
     uint32_t                      m_maxCount;
     double                        m_eps;
-    std::set<segment>             m_segments;
     std::function<double(double)> m_function;
+    std::vector<double>           m_x;
 };
 
 class SeqScanMethod final : public IMethod
@@ -43,9 +47,9 @@ public:
 
     ~SeqScanMethod() = default;
 private:
-    [[nodiscard]] double getValue(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getValue(double x1, double x2) override;
 
-    [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getPoint(double x1, double x2) override;
 
     void preprocess() override;
 };
@@ -60,13 +64,14 @@ public:
 
     ~PiyavskiyMethod() = default;
 private:
-    [[nodiscard]] double getValue(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getValue(double x1, double x2) override;
 
-    [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getPoint(double x1, double x2) override;
 
     void preprocess() override;
 
     double m_parameter;
+    double m;
 };
 
 class StronginMethod final : public IMethod
@@ -79,9 +84,9 @@ public:
 
     ~StronginMethod() = default;
 private:
-    [[nodiscard]] double getValue(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getValue(double x1, double x2) override;
 
-    [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
+    [[nodiscard]] double getPoint(double x1, double x2) override;
 
     void preprocess() override;
 
