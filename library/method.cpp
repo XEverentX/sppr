@@ -36,6 +36,8 @@ void IMethod::execute(uint32_t *count, double *min, double *point, double lowerB
 
     do
     {
+        preprocess();
+
         auto maxValueSegmentIter = --m_segments.end();
         auto maxValueSegment = *maxValueSegmentIter; 
         m_segments.erase(maxValueSegmentIter);
@@ -48,7 +50,7 @@ void IMethod::execute(uint32_t *count, double *min, double *point, double lowerB
         addSegment(middle, right);
 
         auto currMin = m_function(middle);
-        // currEps = std::fabs(globalMin - currMin);
+        currEps = std::fabs(right - left);
 
         if (currMin < globalMin)
         {
@@ -82,6 +84,8 @@ double SeqScanMethod::getPoint(double lowerBoundary, double upperBoundary)
     return (lowerBoundary + upperBoundary) / 2;
 }
 
+void SeqScanMethod::preprocess() { }
+
 PiyavskiyMethod::PiyavskiyMethod(uint32_t count,
                              double eps,
                              double parameter,
@@ -94,13 +98,15 @@ PiyavskiyMethod::PiyavskiyMethod(uint32_t count,
 
 double PiyavskiyMethod::getValue(double lowerBoundary, double upperBoundary)
 {
-    return m_parameter * (upperBoundary - lowerBoundary) / 2 - (f(upperBoundary) + f(lowerBoundary)) / 2;
+    return 0.5 * m_parameter * (upperBoundary - lowerBoundary) - (f(upperBoundary) + f(lowerBoundary)) / 2;
 }
 
 double PiyavskiyMethod::getPoint(double lowerBoundary, double upperBoundary)
 {
-    return (upperBoundary + lowerBoundary) / 2 - (f(upperBoundary) - f(lowerBoundary)) / (2 * m_parameter);
+    return 0.5 * (upperBoundary + lowerBoundary) - (f(upperBoundary) - f(lowerBoundary)) / (2 * m_parameter);
 }
+
+void PiyavskiyMethod::preprocess() { }
 
 StronginMethod::StronginMethod(uint32_t count,
                              double eps,
@@ -114,10 +120,27 @@ StronginMethod::StronginMethod(uint32_t count,
 
 double StronginMethod::getValue(double lowerBoundary, double upperBoundary)
 {
-    return upperBoundary - lowerBoundary;
+    double l = lowerBoundary;
+    double r = upperBoundary;
+    double sqr = (f(r) - f(l));
+    sqr = sqr * sqr;
+
+    return m * (r - l) + sqr / (m * (r - l)) - 2 * (f(r) + f(l));
 }
 
 double StronginMethod::getPoint(double lowerBoundary, double upperBoundary)
 {
-    return (lowerBoundary + upperBoundary) / 2;
+    return 0.5 * (upperBoundary + lowerBoundary) - (f(upperBoundary) - f(lowerBoundary)) / (2 * m);
+}
+
+void StronginMethod::preprocess()
+{
+    double M = 0.;
+    for (auto x : m_segments)
+    {
+        double currX = x.second.first;
+        double prevX = x.second.second;
+        M = std::max(M, std::fabs(f(currX) - f(prevX)) / (currX - prevX));
+    }
+    m = (std::fabs(M) < 1e-10 ? 1. : m_parameter * M);
 }

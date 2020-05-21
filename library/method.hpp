@@ -24,6 +24,8 @@ protected:
 
     [[nodiscard]] virtual double getPoint(double lowerBoundary, double upperBoundary) = 0;
 
+    virtual void preprocess() = 0;
+
     void addSegment(double lowerBoundary, double upperBoundary);
 
     uint32_t                      m_maxCount;
@@ -44,6 +46,8 @@ private:
     [[nodiscard]] double getValue(double lowerBoundary, double upperBoundary) override;
 
     [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
+
+    void preprocess() override;
 };
 
 class PiyavskiyMethod final : public IMethod
@@ -59,6 +63,8 @@ private:
     [[nodiscard]] double getValue(double lowerBoundary, double upperBoundary) override;
 
     [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
+
+    void preprocess() override;
 
     double m_parameter;
 };
@@ -77,5 +83,8 @@ private:
 
     [[nodiscard]] double getPoint(double lowerBoundary, double upperBoundary) override;
 
+    void preprocess() override;
+
     double m_parameter;
+    double m;
 };
