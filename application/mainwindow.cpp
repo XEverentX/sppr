@@ -67,7 +67,8 @@ Window::Window(QWidget *parent)
     QPushButton *scanButton        = new QPushButton("SeqScanning", this);
 
     // Layouts
-    auto layout  = new QVBoxLayout(this);
+    auto mainLayout = new QGridLayout(this);
+    auto layout  = new QVBoxLayout();
     auto evalLayout = new QHBoxLayout();
     auto boundaryLayout = new QHBoxLayout();
     auto methodButtonsLayout = new QHBoxLayout();
@@ -123,7 +124,25 @@ Window::Window(QWidget *parent)
     resultLayout->addWidget(count, 2, 1);
     layout->addLayout(resultLayout);
 
-    setLayout(layout);
+    mainLayout->addLayout(layout, 0, 0);
+
+    // Plot
+    customPlot = new QCustomPlot(this);
+
+    customPlot->xAxis2->setVisible(true);
+    customPlot->xAxis2->setTickLabels(false);
+    customPlot->yAxis2->setVisible(true);
+    customPlot->yAxis2->setTickLabels(false);
+
+    connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    QSizePolicy sp = customPlot->sizePolicy();
+    sp.setHorizontalStretch(1);
+    customPlot->setSizePolicy(sp);
+    mainLayout->addWidget(customPlot, 0, 1);
+
+    setLayout(mainLayout);
 
     // Connect
     connect(runButton, &QPushButton::clicked, this, &Window::run);
@@ -167,7 +186,25 @@ void Window::run()
 
     double globalMin     = 0.;
     double globalPoint   = 0.;
-    uint32_t globalCount = 0; 
+    uint32_t globalCount = 0;
+
+    customPlot->addGraph();
+    customPlot->graph(0)->setPen(QPen(Qt::blue));
+    QVector<double> cx(500), y(500);
+    double len = static_cast<double>(upperBoundaryVal - lowerBoundaryVal) / 500;
+
+    for (int i = 0; i < 500; i++)
+    {
+        cx[i] = i * len;
+        y[i] = evalAVal * sin(cx[i] * evalBVal) + evalCVal * cos(cx[i] * evalDVal);
+    }
+
+    customPlot->graph(0)->setData(cx, y);
+    customPlot->graph(0)->rescaleAxes();
+    customPlot->xAxis->setRange(lowerBoundaryVal, upperBoundaryVal);
+    customPlot->yAxis->setRange(-10, 10);
+
+    customPlot->replot();
 
     SeqScanMethod method1(maxCountVal,
                           epsVal,

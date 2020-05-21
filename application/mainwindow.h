@@ -6,6 +6,8 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
+
+#include "3rdparty/qcustomplot.h"
  
 class Window : public QWidget {
     
@@ -43,6 +45,8 @@ private:
     QLabel *scanLabel;
 
     QLabel *methodLabel;
+
+    QCustomPlot *customPlot;
 
     enum {
         PIYAVSKIY,

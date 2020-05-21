@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     
   Window window;
  
-  window.resize(500, 500);
+  window.resize(1280, 720);
   window.setWindowTitle("App");
   window.show();
  
