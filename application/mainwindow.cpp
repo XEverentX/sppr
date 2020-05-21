@@ -25,7 +25,7 @@ Window::Window(QWidget *parent)
     lowerBoundary = new QLineEdit("0", this);
     upperBoundary = new QLineEdit("8", this);
 
-    parameter = new QLineEdit("1.5", this);
+    parameter = new QLineEdit("1.1", this);
     eps       = new QLineEdit("0.01", this);
     maxCount  = new QLineEdit("800", this);
 
