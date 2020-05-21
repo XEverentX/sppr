@@ -1,4 +1,4 @@
-## Template repo
+## Sppr laboratory work
 
 ### Build & Run
 To build application simply follow a few steps:
