@@ -29,8 +29,8 @@ private:
     QLineEdit *evalC;
     QLineEdit *evalD;
 
-    QLineEdit *lowerBoundary;
-    QLineEdit *upperBoundary;
+    QLineEdit *x1;
+    QLineEdit *x2;
 
     QLineEdit *parameter;
     QLineEdit *eps;

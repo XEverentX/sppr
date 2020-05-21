@@ -22,8 +22,8 @@ Window::Window(QWidget *parent)
     evalC = new QLineEdit("3", this);
     evalD = new QLineEdit("5", this);
 
-    lowerBoundary = new QLineEdit("0", this);
-    upperBoundary = new QLineEdit("8", this);
+    x1 = new QLineEdit("0", this);
+    x2 = new QLineEdit("8", this);
 
     parameter = new QLineEdit("1.1", this);
     eps       = new QLineEdit("0.01", this);
@@ -90,9 +90,9 @@ Window::Window(QWidget *parent)
     evalLayout->addWidget(evaluation5);
     layout->addLayout(evalLayout);
 
-    boundaryLayout->addWidget(lowerBoundary);
+    boundaryLayout->addWidget(x1);
     boundaryLayout->addWidget(boundary);
-    boundaryLayout->addWidget(upperBoundary);
+    boundaryLayout->addWidget(x2);
     layout->addLayout(boundaryLayout);
 
 
@@ -177,8 +177,8 @@ void Window::run()
     auto evalCVal = evalC->text().toDouble();
     auto evalDVal = evalD->text().toDouble();
 
-    auto lowerBoundaryVal = lowerBoundary->text().toDouble();
-    auto upperBoundaryVal = upperBoundary->text().toDouble();
+    auto x1Val = x1->text().toDouble();
+    auto x2Val = x2->text().toDouble();
 
     auto parameterVal = parameter->text().toDouble(); 
     auto epsVal       = eps->text().toDouble();
@@ -191,7 +191,7 @@ void Window::run()
     customPlot->addGraph();
     customPlot->graph(0)->setPen(QPen(Qt::blue));
     QVector<double> cx(500), y(500);
-    double len = static_cast<double>(upperBoundaryVal - lowerBoundaryVal) / 500;
+    double len = static_cast<double>(x2Val - x1Val) / 500;
 
     for (int i = 0; i < 500; i++)
     {
@@ -201,46 +201,50 @@ void Window::run()
 
     customPlot->graph(0)->setData(cx, y);
     customPlot->graph(0)->rescaleAxes();
-    customPlot->xAxis->setRange(lowerBoundaryVal, upperBoundaryVal);
+    customPlot->xAxis->setRange(x1Val, x2Val);
     customPlot->yAxis->setRange(-10, 10);
 
-    customPlot->replot();
-
-    SeqScanMethod method1(maxCountVal,
-                          epsVal,
-                          [&] (double x) -> double {
-        return evalAVal * sin(x * evalBVal) + evalCVal * cos(x * evalDVal);
-    });
-
-    PiyavskiyMethod method2(maxCountVal,
-                               epsVal,
-                               parameterVal,
-                               [&] (double x) -> double {
+    auto lambda = [&] (double x) -> double {
             return evalAVal * sin(x * evalBVal) + evalCVal * cos(x * evalDVal);
-        });
+        };
+
+    IMethod *method;
 
     switch (methodType)
     {
     case SCAN:
-        method1.execute(&globalCount, &globalMin, &globalPoint, lowerBoundaryVal, upperBoundaryVal);
+        method = new SeqScanMethod(maxCountVal, epsVal, lambda);
         break;
 
     case PIYAVSKIY:
 
-        method2.execute(&globalCount, &globalMin, &globalPoint, lowerBoundaryVal, upperBoundaryVal);
+        method = new PiyavskiyMethod(maxCountVal, epsVal, parameterVal, lambda);
         break;
 
     case STRONGIN:
-        StronginMethod method3(maxCountVal,
-                              epsVal,
-                              parameterVal,
-                              [&] (double x) -> double {
-            return evalAVal * sin(x * evalBVal) + evalCVal * cos(x * evalDVal);
-        });
-        method3.execute(&globalCount, &globalMin, &globalPoint, lowerBoundaryVal, upperBoundaryVal);
+        method = new StronginMethod(maxCountVal, epsVal, parameterVal, lambda);
         break;
     }
+    
+    method->execute(&globalCount, &globalMin, &globalPoint, x1Val, x2Val);
+    
+    auto xVector = method->getXVector();
+    QVector<double> qXVector;
+    QVector<double> qYVector;
 
+    for (auto x : xVector)
+    {
+        qXVector.push_back(x);
+        qYVector.push_back(-9.);
+    }
+
+    customPlot->addGraph();
+    customPlot->graph(1)->setData(qXVector, qYVector);
+    customPlot->graph(1)->setPen(QColor(50, 50, 50, 255));
+    customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);
+    customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 4));
+
+    customPlot->replot();
 
     min->setPlaceholderText(QString::number(globalMin));
     count->setPlaceholderText(QString::number(globalCount));
